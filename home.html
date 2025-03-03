@@ -13,7 +13,7 @@
         <button id="logout-btn">Logout</button>
     </nav>
  
-    <div class="container">
+    <div class="container" >
         <h1>Employee List</h1>
 
         <!-- Search Employee Form -->
@@ -38,6 +38,11 @@
           <input type="date" name="dateOfBirth" placeholder="Add Date of Birth" required />
           <button type="submit" id="add-employee-btn">Add Employee</button>
         </form>
+
+        <div class="">
+          <h3 class="" id="avg-salary"></h3>
+          <h3 class="" id="avg-age"></h3>
+        </div>
  
         <table>
             <thead>
@@ -195,55 +200,86 @@
         });
 
         function fetchEmployees(searchQuery = "", criteria = "") {
-            let url = "http://localhost:8080/api/v1/employees";
+              let url = "http://localhost:8080/api/v1/employees";
 
-            // Check if searchQuery is provided and add the corresponding parameter
-            if (searchQuery !== "") {
-                url += `?name=${encodeURIComponent(searchQuery)}`;
-            }
+              // Check if searchQuery is provided and add the corresponding parameter
+              if (searchQuery !== "") {
+                  url += `?name=${encodeURIComponent(searchQuery)}`;
+              }
 
-            // If criteria is provided, add it as a parameter
-            if (criteria !== "" && criteria !== "all") {
-                // Add an "&" if there's already a query parameter, otherwise start with "?"
-                if (url.includes("?")) {
-                    url += `&groupBy=${encodeURIComponent(criteria)}`;
-                } else {
-                    url += `?groupBy=${encodeURIComponent(criteria)}`;
-                }
-            }
+              // If criteria is provided, add it as a parameter
+              if (criteria !== "" && criteria !== "all") {
+                  // Add an "&" if there's already a query parameter, otherwise start with "?"
+                  if (url.includes("?")) {
+                      url += `&groupBy=${encodeURIComponent(criteria)}`;
+                  } else {
+                      url += `?groupBy=${encodeURIComponent(criteria)}`;
+                  }
+              }
 
-            console.log(url); // For debugging, you can check the final URL in the console
+              fetch(url, {
+                  headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+              })
+              .then(response => response.json())
+              .then(employees => {
+                  const tableBody = document.getElementById("employee-table");
+                  tableBody.innerHTML = "";
+                  
+                  // Variables to compute the average salary and average age
+                  let avg_salary = 0;
+                  let avg_age = 0;
+                  let employeeCount = employees.length;
 
-            fetch(url, {
-                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
-            })
-            .then(response => response.json())
-            .then(employees => {
-                const tableBody = document.getElementById("employee-table");
-                tableBody.innerHTML = "";
-                
-                // Loop through employees and display them in the table
-                employees.forEach(emp => {
-                    tableBody.innerHTML += 
-                        `<tr id="row-${emp.employeeId}">
-                            <td>${emp.employeeId}</td>
-                            <td>${emp.name}</td>
-                            <td>${new Date(emp.dateOfBirth).toLocaleDateString()}</td>
-                            <td>${emp.department}</td>
-                            <td>${emp.salary}</td>
-                            <td>
-                                <button onclick="editEmployee(${emp.employeeId})">Edit</button>
-                                <button onclick="deleteEmployee(${emp.employeeId})">Delete</button>
-                            </td>
-                        </tr>`;
-                });
-            })
-            .catch(error => {
-                console.error("Error fetching employees:", error);
-                alert("Failed to fetch employees.");
-            });
-        }
-// Refresh employee data on button click
+                  // Loop through employees and display them in the table
+                  employees.forEach(emp => {
+                      avg_salary += emp.salary;
+
+                      // Calculate the employee's age based on dateOfBirth
+                      const birthDate = new Date(emp.dateOfBirth);
+                      const age = new Date().getFullYear() - birthDate.getFullYear();
+                      avg_age += age;
+
+                      // Add employee data to the table
+                      tableBody.innerHTML += 
+                          `<tr id="row-${emp.employeeId}">
+                              <td>${emp.employeeId}</td>
+                              <td>${emp.name}</td>
+                              <td>${birthDate.toLocaleDateString()}</td>
+                              <td>${emp.department}</td>
+                              <td>${emp.salary}</td>
+                              <td>
+                                  <button onclick="editEmployee(${emp.employeeId})">Edit</button>
+                                  <button onclick="deleteEmployee(${emp.employeeId})">Delete</button>
+                              </td>
+                          </tr>`;
+                  });
+
+                  // Compute averages
+                  if (employeeCount > 0) {
+                      avg_salary = avg_salary / employeeCount;
+                      avg_age = avg_age / employeeCount;
+                  }
+
+                  // Display average salary and age
+                  const avgSalaryElement = document.getElementById("avg-salary");
+                  const avgAgeElement = document.getElementById("avg-age");
+
+                  if (avgSalaryElement) {
+                      avgSalaryElement.innerText = `Average Salary: ${avg_salary.toFixed(2)}`;
+                  }
+
+                  if (avgAgeElement) {
+                      avgAgeElement.innerText = `Average Age: ${Math.round(avg_age)}`;
+                  }
+
+              })
+              .catch(error => {
+                  console.error("Error fetching employees:", error);
+                  alert("Failed to fetch employees.");
+              });
+          }
+
+        // Refresh employee data on button click
         document.getElementById("fetch-employees").addEventListener("click", () => fetchEmployees());
 
         // Search employee functionality
