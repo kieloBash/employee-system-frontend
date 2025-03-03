@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Employee Management System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body onload="checkAuthentication()">
+ 
+    <nav class="navbar">
+        <span class="logo">EMS Dashboard</span>
+        <button id="logout-btn">Logout</button>
+    </nav>
+ 
+    <div class="container">
+        <h1>Employee List</h1>
+
+        <!-- Search Employee Form -->
+        <form id="search-employee-form">
+          <select name="search-criteria">
+            <option value="all">All</option>
+            <option value="department">Department</option>
+            <option value="age">Age</option>
+          </select>
+          <input name="search-name" placeholder="Enter search term"/>
+          <button type="submit">Search Employee</button>
+        </form>
+
+        <button id="fetch-employees">Refresh Employees</button>
+
+        <!-- Add Employee Form -->
+        <form id="add-employee-form">
+          <input name="name" placeholder="Add Name" required />
+          <input name="department" placeholder="Add Department" required />
+          <input name="employeeId" placeholder="Add Employee ID" required />
+          <input type="number" name="salary" placeholder="Add Salary" required />
+          <input type="date" name="dateOfBirth" placeholder="Add Date of Birth" required />
+          <button type="submit" id="add-employee-btn">Add Employee</button>
+        </form>
+ 
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Date of Birth</th>
+                    <th>Department</th>
+                    <th>Salary</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="employee-table">
+                <!-- Employees will be loaded here -->
+            </tbody>
+        </table>
+    </div>
+ 
+    <script>
+        // Function to edit employee
+        function editEmployee(employeeId) {
+            const row = document.getElementById(`row-${employeeId}`);
+            const cells = row.getElementsByTagName('td');
+            
+            // Transform cells into input fields for editing
+            cells[1].innerHTML = `<input type="text" value="${cells[1].innerText}" id="name-${employeeId}" />`;
+            cells[2].innerHTML = `<input type="date" value="${new Date(cells[2].innerText).toISOString().split('T')[0]}" id="dob-${employeeId}" />`;
+            cells[3].innerHTML = `<input type="text" value="${cells[3].innerText}" id="department-${employeeId}" />`;
+            cells[4].innerHTML = `<input type="number" value="${cells[4].innerText}" id="salary-${employeeId}" />`;
+            cells[5].innerHTML = 
+                `<button onclick="saveEmployee(${employeeId})">Save</button>
+                <button onclick="cancelEdit(${employeeId})">Cancel</button>`;
+        }
+
+        // Function to cancel editing
+        function cancelEdit(employeeId) {
+            fetchEmployees(); // Reload the employee list
+        }
+
+        // Function to save edited employee data
+        function saveEmployee(employeeId) {
+            const name = document.getElementById(`name-${employeeId}`).value;
+            const dob = document.getElementById(`dob-${employeeId}`).value;
+            const department = document.getElementById(`department-${employeeId}`).value;
+            const salary = document.getElementById(`salary-${employeeId}`).value;
+
+            const updatedEmployee = {
+                name,
+                dateOfBirth: new Date(dob),
+                employeeId,
+                department,
+                salary: Number(salary)
+            };
+
+            fetch(`http://localhost:8080/api/v1/employees/update/${employeeId}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(updatedEmployee)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result) {
+                    alert("Employee updated successfully!");
+                    fetchEmployees(); // Refresh employee list
+                } else {
+                    alert("Error updating employee.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to update employee.");
+            });
+        }
+
+        // Function to delete an employee
+        function deleteEmployee(employeeId) {
+            if (confirm("Are you sure you want to delete this employee?")) {
+                fetch(`http://localhost:8080/api/v1/employees/delete/${employeeId}`, {
+                    method: "DELETE",
+                    headers: {
+                        "Authorization": `Bearer ${localStorage.getItem("token")}`
+                    }
+                })
+                .then(response => {
+                    if(response.ok){
+                        alert("Employee deleted successfully!");
+                        fetchEmployees(); // Refresh employee list
+                    } else {
+                        alert("Error deleting employee.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("Failed to delete employee.");
+                });
+            }
+        }
+
+        // Function to add an employee
+        function addEmployee(event) {
+            event.preventDefault(); // Prevent form from submitting traditionally
+
+            const formData = new FormData(event.target);
+            const employeeData = {
+                name: formData.get("name"),
+                department: formData.get("department"),
+                employeeId: formData.get("employeeId"),
+                salary: formData.get("salary"),
+                dateOfBirth: formData.get("dateOfBirth")
+            };
+
+            // Send POST request to server to add employee
+            fetch("http://localhost:8080/api/v1/employees/create", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(employeeData)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result) {
+                    alert("Employee added successfully!");
+                    fetchEmployees(); // Refresh employee list after adding a new employee
+                } else {
+                    alert("Error adding employee.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("Failed to add employee.");
+            });
+        }
+
+        // Form submit event listener
+        document.getElementById("add-employee-form").addEventListener("submit", addEmployee);
+
+        // Check authentication function
+        function checkAuthentication() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                alert("You must be logged in to access this page.");
+                window.location.href = "index.html";
+            }
+        }
+
+        // Logout button event listener
+        document.getElementById("logout-btn").addEventListener("click", function () {
+            localStorage.removeItem("token");
+            window.location.href = "index.html";
+        });
+
+        function fetchEmployees(searchQuery = "", criteria = "") {
+            let url = "http://localhost:8080/api/v1/employees";
+
+            // Check if searchQuery is provided and add the corresponding parameter
+            if (searchQuery !== "") {
+                url += `?name=${encodeURIComponent(searchQuery)}`;
+            }
+
+            // If criteria is provided, add it as a parameter
+            if (criteria !== "" && criteria !== "all") {
+                // Add an "&" if there's already a query parameter, otherwise start with "?"
+                if (url.includes("?")) {
+                    url += `&groupBy=${encodeURIComponent(criteria)}`;
+                } else {
+                    url += `?groupBy=${encodeURIComponent(criteria)}`;
+                }
+            }
+
+            console.log(url); // For debugging, you can check the final URL in the console
+
+            fetch(url, {
+                headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
+            })
+            .then(response => response.json())
+            .then(employees => {
+                const tableBody = document.getElementById("employee-table");
+                tableBody.innerHTML = "";
+                
+                // Loop through employees and display them in the table
+                employees.forEach(emp => {
+                    tableBody.innerHTML += 
+                        `<tr id="row-${emp.employeeId}">
+                            <td>${emp.employeeId}</td>
+                            <td>${emp.name}</td>
+                            <td>${new Date(emp.dateOfBirth).toLocaleDateString()}</td>
+                            <td>${emp.department}</td>
+                            <td>${emp.salary}</td>
+                            <td>
+                                <button onclick="editEmployee(${emp.employeeId})">Edit</button>
+                                <button onclick="deleteEmployee(${emp.employeeId})">Delete</button>
+                            </td>
+                        </tr>`;
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching employees:", error);
+                alert("Failed to fetch employees.");
+            });
+        }
+// Refresh employee data on button click
+        document.getElementById("fetch-employees").addEventListener("click", () => fetchEmployees());
+
+        // Search employee functionality
+        document.getElementById("search-employee-form").addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const criteria = event.target.querySelector("select[name='search-criteria']").value ?? "";
+            const searchName = event.target.querySelector("input[name='search-name']").value ?? "";
+
+            console.log(criteria)
+            console.log(searchName)
+            fetchEmployees(searchName, criteria); // Fetch employees filtered by search term
+        });
+
+        // Initial load of employees
+        fetchEmployees();
+    </script>
+</body>
+</html>
