@@ -5,8 +5,8 @@
 }
 
 body {
-  font-family: Arial, sans-serif;
-  background-color: #f9f1f1;
+  font-family: 'Roboto', sans-serif;
+  background-color: #f4f7f6;
   padding: 20px;
 }
 
@@ -14,27 +14,36 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  gap: 10px;
   margin-bottom: 20px;
 }
 
 .title {
-  font-size: 24px;
-  color: #007BFF;
+  font-size: 28px;
+  color: #333;
 }
 
-.logout-btn {
+.logout-btn, .department-btn {
   padding: 10px 15px;
-  background-color: #fff;
-  border: 1px solid #007BFF;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
+}
+
+.logout-btn:hover, .department-btn:hover {
+  background-color: #0056b3;
 }
 
 .search-section, .add-employee-section, .stats-section, .table-section {
@@ -63,6 +72,10 @@ body {
   cursor: pointer;
 }
 
+.search-submit-btn:hover {
+  background-color: #0056b3;
+}
+
 .add-employee-form {
   display: flex;
   flex-wrap: wrap;
@@ -79,16 +92,39 @@ body {
 
 .submit-btn {
   padding: 10px 20px;
-  background-color: #007BFF;
+  background-color: #28a745;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 }
 
+.submit-btn:hover {
+  background-color: #218838;
+}
+
 .stats {
-  font-size: 16px;
-  color: #007BFF;
+  font-size: 18px;
+  color: #333;
+  text-align: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background-color: #e3f2fd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+}
+
+.stats:nth-child(1) {
+  background-color: #c8e6c9;
+}
+
+.stats:nth-child(2) {
+  background-color: #ffe0b2;
+}
+
+.stats:hover {
+  transform: scale(1.05);
+  transition: all 0.3s ease;
 }
 
 .employee-table {
@@ -120,50 +156,33 @@ button {
   cursor: pointer;
 }
 
-/* button:hover {
-  opacity: 0.9;
-} */
-
-.stats-section {
+.pagination-controls {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 20px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
 }
 
-.stats {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  text-align: center;
+.pagination-controls button {
   padding: 10px 20px;
-  border-radius: 8px;
-  background-color: #e3f2fd; /* Light blue background */
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  width: 100%;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
-.stats:nth-child(1) {
-  background-color: #c8e6c9; /* Greenish background for avg salary */
+.pagination-controls button:hover {
+  background-color: #0056b3;
 }
 
-.stats:nth-child(2) {
-  background-color: #ffe0b2; /* Orangeish background for avg age */
-}
-
-.stats:hover {
-  transform: scale(1.05);
-  transition: all 0.3s ease;
-}
-
-.stats-title {
-  font-size: 16px;
-  color: #007BFF;
-  margin-bottom: 5px;
+.pagination-controls input {
+  width: 50px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-align: center;
 }
 
 .employee-table td button {
@@ -178,24 +197,23 @@ button {
 }
 
 .employee-table td button.edit-btn {
-  background-color: #4caf50; /* Green background for edit */
+  background-color: #4caf50;
   color: white;
 }
 
 .employee-table td button.delete-btn {
-  background-color: #f44336; /* Red background for delete */
+  background-color: #f44336;
   color: white;
 }
 
 .employee-table td button:hover {
-  /* transform: scale(1.05); */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .employee-table td button.edit-btn:hover {
-  background-color: #45a049; /* Darker green for hover */
+  background-color: #45a049;
 }
 
 .employee-table td button.delete-btn:hover {
-  background-color: #e53935; /* Darker red for hover */
+  background-color: #e53935;
 }
