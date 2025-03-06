@@ -4,10 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchAPIs();
 });
 
-function editDepartment(id) {
-    alert(`Edit department with ID: ${id}`);
-}
-
 async function deleteDepartment(id) {
     if (!checkerAPI()) return;
 
@@ -36,10 +32,11 @@ async function deleteDepartment(id) {
         // Optionally, you can fetch the updated list of departments
         fetchDepartments();
     } catch (error) {
-        console.log(error)
+        console.log(error);
         console.error("Error deleting department:", error);
     }
 }
+
 async function fetchAPIs() {
     try {
         // Fetch the data from the API
@@ -115,11 +112,12 @@ function populateTable(data) {
     tableBody.innerHTML = '';
     data.forEach(department => {
         const row = document.createElement('tr');
+        row.setAttribute('data-id', department.id);
 
         row.innerHTML = `
                 <td>${department.id}</td>
-                <td>${department.name}</td>
-                <td>
+                <td class="name">${department.name}</td>
+                <td class="actions">
                     <button class="edit" onclick="editDepartment(${department.id})">Edit</button>
                     <button class="delete" onclick="deleteDepartment(${department.id})">Delete</button>
                 </td>
@@ -157,7 +155,7 @@ document.getElementById('addDepartmentForm').addEventListener('submit', async (e
             if (statusCode == 201 || statusCode == 200) {
                 alert(message);
             }
-            console.log(result)
+            console.log(result);
 
             // Optionally, you can fetch the updated list of departments
             fetchDepartments();
@@ -170,3 +168,82 @@ document.getElementById('addDepartmentForm').addEventListener('submit', async (e
     }
 });
 
+function editDepartment(id) {
+    const row = document.querySelector(`tr[data-id='${id}']`);
+    if (!row) {
+        console.error(`Row with data-id='${id}' not found.`);
+        return;
+    }
+    const nameCell = row.querySelector('.name');
+    const actionsCell = row.querySelector('.actions');
+
+    const currentName = nameCell.textContent;
+    nameCell.innerHTML = `<input type="text" value="${currentName}" class="edit-input">`;
+
+    actionsCell.innerHTML = `
+        <button class="save" onclick="saveDepartment(${id})">Save</button>
+        <button class="cancel" onclick="cancelEdit(${id}, '${currentName}')">Cancel</button>
+    `;
+}
+
+function cancelEdit(id, originalName) {
+    const row = document.querySelector(`tr[data-id='${id}']`);
+    if (!row) {
+        console.error(`Row with data-id='${id}' not found.`);
+        return;
+    }
+    const nameCell = row.querySelector('.name');
+    const actionsCell = row.querySelector('.actions');
+
+    nameCell.textContent = originalName;
+    actionsCell.innerHTML = `
+        <button class="edit" onclick="editDepartment(${id})">Edit</button>
+        <button class="delete" onclick="deleteDepartment(${id})">Delete</button>
+    `;
+}
+
+async function saveDepartment(id) {
+    const row = document.querySelector(`tr[data-id='${id}']`);
+    if (!row) {
+        console.error(`Row with data-id='${id}' not found.`);
+        return;
+    }
+    const nameInput = row.querySelector('.edit-input');
+    const newName = nameInput.value.trim();
+
+    if (newName) {
+        try {
+            const url = `${apiURLs.updateDepartment}`;
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, name: newName })
+            });
+
+            if (!response.ok) {
+                const errorResult = await response.json();
+                throw new Error(errorResult.message || `HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            const { data, message, statusCode } = result;
+            if (statusCode == 201 || statusCode == 200) {
+                alert(message);
+            }    
+            console.log(result);
+
+            // Update the table row with the new name
+            row.querySelector('.name').textContent = newName;
+            row.querySelector('.actions').innerHTML = `
+                <button class="edit" onclick="editDepartment(${id})">Edit</button>
+                <button class="delete" onclick="deleteDepartment(${id})">Delete</button>
+            `;
+        } catch (error) {
+            console.error("Error updating department:", error);
+            alert(error.message || "Failed to update department.");
+        }
+    }
+}
