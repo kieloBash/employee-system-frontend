@@ -244,12 +244,11 @@ document.getElementById("fetch-employees").addEventListener("click", () => fetch
 document.getElementById("search-employee-form").addEventListener("submit", function (event) {
     event.preventDefault();
 
-    const criteria = event.target.querySelector("select[name='search-criteria']").value ?? "";
+    // const criteria = event.target.querySelector("select[name='search-criteria']").value ?? "";
     const searchName = event.target.querySelector("input[name='search-name']").value ?? "";
 
-    console.log(criteria)
     console.log(searchName)
-    fetchEmployees(searchName, criteria); // Fetch employees filtered by search term
+    fetchEmployees(searchName, ""); // Fetch employees filtered by search term
 });
 
 // Update pagination controls
