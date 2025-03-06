@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Departments</title>
+    <link rel="stylesheet" href="department.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Departments</h1>
+        <form id="addDepartmentForm">
+            <input type="text" id="departmentName" placeholder="Department Name" required>
+            <button type="submit">Add Department</button>
+            <a href="/home.html" class="home-btn" id="home-btn">Go Home</a>
+
+        </form>
+        <table id="departmentsTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+    <script src="departments.js"></script>
+</body>
+</html>

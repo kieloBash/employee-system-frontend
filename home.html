@@ -12,6 +12,7 @@
       <section class="header">
         <h2 class="title">Employee Management System</h2>
         <button class="logout-btn" id="logout-btn">Log out</button>
+        <a href="/departments.html" class="department-btn" id="department-btn">Departments</a>
       </section>
 
       <section class="search-section">
@@ -31,7 +32,7 @@
         <form id="add-employee-form" class="add-employee-form">
           <input class="input" name="name" placeholder="Add Name" required />
           <input class="input" name="department" placeholder="Add Department" required />
-          <input class="input" name="employeeId" placeholder="Add Employee ID" required />
+          <input class="input" name="employeeId" type="number" placeholder="Add Employee ID" required />
           <input class="input" type="number" name="salary" placeholder="Add Salary" required />
           <input class="input" type="date" name="dateOfBirth" placeholder="Add Date of Birth" required />
           <button class="submit-btn" type="submit" id="add-employee-btn">Add Employee</button>
@@ -64,6 +65,8 @@
     </main>
  
     <script>
+        let apiURLs = {};
+
         // Function to edit employee
         function editEmployee(employeeId) {
             const row = document.getElementById(`row-${employeeId}`);
@@ -172,6 +175,8 @@
             .then(result => {
                 if (result) {
                     alert("Employee added successfully!");
+                    const form = document.getElementById("add-employee-form");
+                    form.reset();
                     fetchEmployees(); // Refresh employee list after adding a new employee
                 } else {
                     alert("Error adding employee.");
@@ -202,7 +207,14 @@
         });
 
         function fetchEmployees(searchQuery = "", criteria = "") {
-              let url = "http://localhost:8080/api/v1/employees";
+            if (!apiURLs || !apiURLs.getEmployees) {
+                console.error("Error: API URLs are not available. Please fetch the config first.");
+                alert("API URLs are not available. Please try again later.");
+                return; // Exit the function early if API URLs are not available
+            }
+
+            let url = apiURLs.getEmployees;
+            console.log(url)
 
               // Check if searchQuery is provided and add the corresponding parameter
               if (searchQuery !== "") {
@@ -223,9 +235,13 @@
                   headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
               })
               .then(response => response.json())
-              .then(employees => {
+              .then(data => {
                   const tableBody = document.getElementById("employee-table");
                   tableBody.innerHTML = "";
+
+                  console.log(data);
+                const employees = data.content;
+                  console.log(employees)
                   
                   // Variables to compute the average salary and average age
                   let avg_salary = 0;
@@ -247,8 +263,8 @@
                               <td>${emp.employeeId}</td>
                               <td>${emp.name}</td>
                               <td>${birthDate.toLocaleDateString()}</td>
-                              <td>${emp.department}</td>
-                              <td>${emp.salary}</td>
+                              <td>${emp.department.name}</td>
+                              <td>$${emp.salary?.toLocaleString()}</td>
                               <td>
                                   <button onclick="editEmployee(${emp.employeeId})">Edit</button>
                                   <button onclick="deleteEmployee(${emp.employeeId})">Delete</button>
@@ -267,7 +283,7 @@
                   const avgAgeElement = document.getElementById("avg-age");
 
                   if (avgSalaryElement) {
-                      avgSalaryElement.innerText = `Average Salary: ${avg_salary.toFixed(2)}`;
+                      avgSalaryElement.innerText = `Average Salary: $${parseFloat(avg_salary.toFixed(2)).toLocaleString()}`;
                   }
 
                   if (avgAgeElement) {
@@ -296,8 +312,35 @@
             fetchEmployees(searchName, criteria); // Fetch employees filtered by search term
         });
 
-        // Initial load of employees
-        fetchEmployees();
+        
+
+        // ********************************** APIs
+        async function fetchAPIs() {
+            try {
+                // Fetch the data from the API
+                const res = await fetch("http://localhost:8080/api/config");
+
+                // Ensure the response is successful
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+
+                // Parse the JSON response
+                const result = await res.json();
+
+                // Log the result
+                console.log(result.data);
+
+                apiURLs = result.data;
+
+                fetchEmployees();
+            } catch (e) {
+                console.error("Error fetching API:", e);
+            }
+        }
+
+
+        fetchAPIs();
     </script>
 </body>
 </html>
