@@ -36,9 +36,11 @@ function saveEmployee(employeeId) {
         name,
         dateOfBirth: new Date(dob),
         employeeId,
-        department,
+        departmentName: department,
         salary: Number(salary)
     };
+
+    console.log(updatedEmployee)
 
     fetch(`http://localhost:8080/api/v1/employees/update/${employeeId}`, {
         method: "PUT",
@@ -50,11 +52,14 @@ function saveEmployee(employeeId) {
     })
         .then(response => response.json())
         .then(result => {
-            if (result) {
+            console.log(result);
+            const { statusCode, message } = result;
+
+            if (statusCode !== 500) {
                 alert("Employee updated successfully!");
                 fetchEmployees(); // Refresh employee list
             } else {
-                alert("Error updating employee.");
+                alert(message);
             }
         })
         .catch(error => {
@@ -156,17 +161,12 @@ function fetchEmployees(searchQuery = "", criteria = "", page = 0) {
 
     // Check if searchQuery is provided and add the corresponding parameter
     if (searchQuery !== "") {
-        url += `?name=${encodeURIComponent(searchQuery)}`;
+        url += `&name=${encodeURIComponent(searchQuery)}`;
     }
 
     // If criteria is provided, add it as a parameter
     if (criteria !== "" && criteria !== "all") {
-        // Add an "&" if there's already a query parameter, otherwise start with "?"
-        if (url.includes("?")) {
-            url += `&groupBy=${encodeURIComponent(criteria)}`;
-        } else {
-            url += `?groupBy=${encodeURIComponent(criteria)}`;
-        }
+        url += `&groupBy=${encodeURIComponent(criteria)}`;
     }
 
     fetch(url, {
@@ -184,10 +184,10 @@ function fetchEmployees(searchQuery = "", criteria = "", page = 0) {
             // Variables to compute the average salary and average age
             let avg_salary = 0;
             let avg_age = 0;
-            let employeeCount = employees.length;
+            let employeeCount = employees?.length;
 
             // Loop through employees and display them in the table
-            employees.forEach(emp => {
+            employees?.forEach(emp => {
                 avg_salary += emp.salary;
 
                 // Calculate the employee's age based on dateOfBirth
@@ -231,6 +231,7 @@ function fetchEmployees(searchQuery = "", criteria = "", page = 0) {
             updatePaginationControls(data);
         })
         .catch(error => {
+            console.log(error)
             console.error("Error fetching employees:", error);
             alert("Failed to fetch employees.");
         });
